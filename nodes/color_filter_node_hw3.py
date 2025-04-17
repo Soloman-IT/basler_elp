@@ -6,24 +6,21 @@ import cv2
 import numpy as np
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
+import sys
 
 class ColorFilter:
     def __init__(self):
         rospy.init_node('color_filter_node')
         
-        # Получение параметра цвета
-        self.color = rospy.get_param('~color', 'красный').lower()
-        
-        # Инициализация CvBridge
+        self.color = sys.argv[1]
+        self.color = self.color[7:]
+    
         self.bridge = CvBridge()
         
-        # Определение диапазонов HSV для цветов
         self.set_hsv_ranges()
         
-        # Публикатор для маски
         self.mask_pub = rospy.Publisher('/color_mask', Image, queue_size=10)
         
-        # Подписчик на изображение с камеры
         self.image_sub = rospy.Subscriber('/usb_cam/image_raw', Image, self.image_callback)
         
         rospy.loginfo(f"Фильтр цвета запущен для цвета: {self.color}")
@@ -46,13 +43,10 @@ class ColorFilter:
 
     def image_callback(self, msg):
         try:
-            # Конвертация ROS Image в OpenCV Image (BGR)
             cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
             
-            # Конвертация в HSV
             hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
             
-            # Создание маски
             if self.color == 'красный':
                 mask1 = cv2.inRange(hsv_image, self.lower1, self.upper1)
                 mask2 = cv2.inRange(hsv_image, self.lower2, self.upper2)
@@ -60,12 +54,10 @@ class ColorFilter:
             else:
                 mask = cv2.inRange(hsv_image, self.lower, self.upper)
             
-            # Морфологические операции для улучшения маски
-            kernel = np.ones((5,5), np.uint8)
+            kernel = np.ones((3,3), np.uint8)
             mask = cv2.erode(mask, kernel, iterations=1)
             mask = cv2.dilate(mask, kernel, iterations=1)
             
-            # Публикация маски
             mask_msg = self.bridge.cv2_to_imgmsg(mask, "mono8")
             self.mask_pub.publish(mask_msg)
             

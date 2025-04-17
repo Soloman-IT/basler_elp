@@ -44,7 +44,10 @@ target_include_directories(subscriber_cpp PRIVATE ${catkin_INCLUDE_DIRS})
 target_link_libraries(subscriber_cpp PRIVATE ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 catkin_install_python(PROGRAMS
-  nodes/base.py
-  nodes/detector.py
+  nodes/detector_hw2.py
+  nodes/color_filter_node_hw3.py
+  nodes/publisher_hw1.py
+  nodes/subscriber_hw1.py
+  # nodes/color_filter_node_hw3.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
